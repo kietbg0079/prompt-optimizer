@@ -14,7 +14,7 @@ class Summarizer:
         """
         return SUMMARIZE_SUGGESTIONS_PROMPT.format(suggestions=valuate_results)
     
-    def summarize(self, valuate_results: List[str],) -> str:
+    def summarize(self, valuate_results: List[str]) -> str:
         """
         Summarize the valuate results.
         """

@@ -132,17 +132,3 @@ class BaseModel(ABC):
         return f"{self.__class__.__name__}(model={self.model_name}, provider={self.get_provider_name()})"
 
 # Helper for running async code from sync context
-def run_async(async_func, *args, **kwargs):
-    """
-    Run an async function from a synchronous context.
-    
-    Args:
-        async_func: Async function to run
-        *args: Positional arguments for the function
-        **kwargs: Keyword arguments for the function
-        
-    Returns:
-        Result of the async function
-    """
-    loop = asyncio.get_event_loop()
-    return loop.run_until_complete(async_func(*args, **kwargs))

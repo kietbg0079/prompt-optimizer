@@ -1,4 +1,4 @@
-from .base_model import BaseModel, run_async
+from .base_model import BaseModel
 from .gpt_model import GPTModel
 
-__all__ = ["BaseModel", "GPTModel", "run_async"]
+__all__ = ["BaseModel", "GPTModel"]

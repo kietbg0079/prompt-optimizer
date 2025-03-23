@@ -1,6 +1,6 @@
 from typing import Dict, Any, List, Optional
 import logging
-
+import asyncio
 from prompt_optimizer.prompt_template import VALUATOR_PROMPT
 from prompt_optimizer.model import BaseModel
 from .summarize_suggestions import Summarizer
@@ -91,7 +91,6 @@ class Valuator:
             return []
         
         # Create tasks for concurrent evaluation
-        import asyncio
         
         tasks = []
         for i, item in enumerate(data_chunk):
@@ -107,7 +106,7 @@ class Valuator:
         # Execute all tasks concurrently
         try:
             suggestions = await asyncio.gather(*tasks)
-            final_suggestion = Summarizer(suggestions, self.llm_client).summarize()
+            final_suggestion = Summarizer(self.llm_client).summarize(suggestions)
             return final_suggestion
         except Exception as e:
             logging.error(f"Error during batch valuation: {e}")

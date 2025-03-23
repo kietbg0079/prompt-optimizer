@@ -1,8 +1,8 @@
 import openai
 from openai import AsyncOpenAI
 from typing import Dict, Any, List, Optional
-from langchain_openai import ChatOpenAI
-from .base_model import BaseModel, run_async
+from .base_model import BaseModel  
+from prompt_optimizer.helper.utils import run_async
 from prompt_optimizer.config import LLM_CONFIG
 
 class GPTModel(BaseModel):

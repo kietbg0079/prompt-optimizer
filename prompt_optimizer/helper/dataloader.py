@@ -1,18 +1,19 @@
-from typing import List, Dict, Any, Iterator, Optional
+from typing import List, Dict, Any, Iterator, Optional, Union
 import json
 import os
 import pandas as pd
 import logging
 from pathlib import Path
 import random
+from pandas import DataFrame
+
 class DataLoader:
     """
     A class that loads evaluation data (input, output, system_prompt) and provides chunk-based access.
     """
     
     def __init__(self, 
-                 data_path: str = None, 
-                 data: List[Dict[str, Any]] = None,
+                 data: Union[str, DataFrame] = None, 
                  shuffle: bool = True,
                  seed: int = 42):
         """
@@ -22,16 +23,29 @@ class DataLoader:
             data_path: Path to the data file (JSON)
             data: Direct data input as a list of dictionaries
         """
-        if data_path is not None:
-            self.data = self._load_data_from_csv(data_path, shuffle, seed)
-        elif data is not None:
-            self.data = data
+        if isinstance(data, str):
+            self.data = self._load_data_from_csv(data, shuffle, seed)
+        elif isinstance(data, DataFrame):
+            self.data = self._load_data_from_df(data, shuffle, seed)
         else:
-            raise ValueError("Either data_path or data must be provided")
+            raise ValueError("Invalid data type")
             
         self._validate_data()
         self.current_index = 0
-        
+
+    def _load_data_from_df(self, 
+                            data: DataFrame,
+                            shuffle: bool,
+                            seed: int) -> List[Dict[str, Any]]:
+        """
+        Load data from a DataFrame.
+        """
+        data = data.to_dict(orient='records')
+        if shuffle:
+            random.seed(seed)
+            random.shuffle(data)
+        return data
+    
     def _load_data_from_csv(self, 
                             data_path: str, 
                             shuffle: bool, 
@@ -50,11 +64,7 @@ class DataLoader:
             raise FileNotFoundError(f"Data file not found: {data_path}")
             
         data = pd.read_csv(path)
-        data = data.to_dict(orient='records')
-        if shuffle:
-            random.seed(seed)
-            random.shuffle(data)
-        return data
+        return self._load_data_from_df(data, shuffle, seed)
     
     def _validate_data(self):
         """Validate that data contains required fields."""
