@@ -1,0 +1,8 @@
+llm:
+  model_name: gpt-4o-mini
+  temperature: 0.7
+  provider: openai
+
+optimizer:
+  max_iterations: 5
+  chunk_size: 10
