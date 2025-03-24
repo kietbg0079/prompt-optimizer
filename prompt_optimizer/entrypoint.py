@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Request, HTTPException, Depends
+from fastapi import FastAPI, UploadFile, File, Form, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from http import HTTPStatus
@@ -6,6 +6,7 @@ import pandas as pd
 from io import StringIO
 from prompt_optimizer.helper.schema import OptimizeResponse, OptimizeFileUploadRequest
 from prompt_optimizer.model import GPTModel
+from prompt_optimizer.config import OPTIMIZER_CONFIG
 from prompt_optimizer.prompt_optimizer import run_optimizer
 
 app = FastAPI()
@@ -32,19 +33,33 @@ async def optimize(request: Request):
         "status": HTTPStatus.OK,
     }
 
+async def get_optimize_request_form(
+    system_prompt: str = Form(...),
+    iterations: int = Form(None),
+    chunk_size: int = Form(None),
+    llm_client: str = Form(...)
+) -> OptimizeFileUploadRequest:
+    """
+    Dependency that creates an OptimizeFileUploadRequest from form data.
+    """
+    return OptimizeFileUploadRequest(
+        system_prompt=system_prompt,
+        iterations=iterations,
+        chunk_size=chunk_size,
+        llm_client=llm_client
+    )
+
 @app.post("/optimize/upload", response_model=OptimizeResponse)
 async def optimize_with_csv_upload(
     file: UploadFile = File(...),
-    request: OptimizeFileUploadRequest = Depends()
+    request: OptimizeFileUploadRequest = Depends(get_optimize_request_form)
 ):
     """
     Endpoint that accepts a CSV file upload and returns an optimized prompt.
     
     Args:
         file: Uploaded CSV file with input and ground_truth columns
-        system_prompt: Initial system prompt to optimize
-        iterations: Number of optimization iterations
-        chunk_size: Number of examples to process in each chunk
+        request: Request object containing optimization parameters
     
     Returns:
         JSON response with optimized prompt
@@ -57,8 +72,8 @@ async def optimize_with_csv_upload(
     content = await file.read()
     df = pd.read_csv(StringIO(content.decode("utf-8")))
     config_dict = {
-        "max_iterations": request.iterations,
-        "chunk_size": request.chunk_size
+        "max_iterations": request.iterations if request.iterations else OPTIMIZER_CONFIG.max_iterations,
+        "chunk_size": request.chunk_size if request.chunk_size else OPTIMIZER_CONFIG.chunk_size
     }
     try:
         if request.llm_client == "gpt":
@@ -77,7 +92,7 @@ async def optimize_with_csv_upload(
         return {
             "status": HTTPStatus.OK,
             "optimized_prompt": optimized_prompt,
-            "iterations_completed": request.iterations
+            "iterations_completed": config_dict["max_iterations"]
         }
     
     except Exception as e:

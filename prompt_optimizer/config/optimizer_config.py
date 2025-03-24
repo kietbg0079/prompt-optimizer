@@ -8,5 +8,5 @@ from typing import Optional, Dict, Any
 class OptimizerConfig:
     """Configuration for the prompt optimizer."""
     # Optimization settings
-    max_iterations: int = 5
-    chunk_size: int = 10
+    max_iterations: int = 1
+    chunk_size: int = 2
